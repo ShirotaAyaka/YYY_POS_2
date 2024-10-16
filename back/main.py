@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, CHAR
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 
@@ -45,6 +46,50 @@ class ItemModel(Base):
     name = Column(String(50), nullable=False)
     price = Column(Integer, nullable=False)
 
+# Pydanticモデル
+class CodeRequest(BaseModel):
+    code: str
+
+# 取引マスタモデル
+class TransactionModel(Base):
+    __tablename__ = "取引マスタ"
+    TRD_ID = Column(Integer, primary_key=True, autoincrement=True)
+    EMP_CD = Column(CHAR(10), nullable=False)
+    STORE_CD = Column(CHAR(5), nullable=False) 
+    POS_NO = Column(CHAR(3), nullable=False)
+    TOTAL_AMT = Column(Integer, nullable=False)
+
+# Pydanticモデルにstore_cdを追加
+class PurchaseRequest(BaseModel):
+    items: list
+    emp_cd: str
+    store_cd: str  # store_cdを追加
+    pos_no: str
+    total_amt: int
+
+
+# 商品を取得するエンドポイント
+@app.post("/items/")
+def get_item_by_code(request: CodeRequest, db: Session = Depends(get_db)):
+    item = db.query(ItemModel).filter(ItemModel.code == request.code).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return {"name": item.name, "price": item.price}
+
+# 購入リクエストを処理するエンドポイント
+@app.post("/purchase")
+def process_purchase(request: PurchaseRequest, db: Session = Depends(get_db)):
+    transaction = TransactionModel(
+        EMP_CD=request.emp_cd,
+        STORE_CD=request.store_cd,  # STORE_CDを追加
+        POS_NO=request.pos_no,
+        TOTAL_AMT=request.total_amt,
+    )
+    db.add(transaction)
+    db.commit()
+    return {"message": "Purchase processed successfully", "transaction_id": transaction.TRD_ID}
+
+Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def home():
@@ -55,8 +100,3 @@ async def check():
     return {"message": "確認しました"}
 
 
-# エンドポイントの追加
-@app.get("/items/")
-def read_items(db: Session = Depends(get_db)):
-    items = db.query(ItemModel).all()
-    return items
