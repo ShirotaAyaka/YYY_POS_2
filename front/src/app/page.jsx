@@ -30,6 +30,7 @@ export default function Home() {
         body: JSON.stringify({ code }),  // 商品コードをPOSTする
       });
       const data = await res.json();
+      console.log(data);
       setItemData(data);  // 返ってきた商品データを保存
     } catch (error) {
       console.error('Error submitting code:', error);
@@ -38,13 +39,22 @@ export default function Home() {
 
   // 「追加」ボタンを押したときの処理
   const handleAddToList = () => {
-    if (itemData) {
+    if (itemData && itemData.prd_id) {  // prd_idがあるか確認
+        // 現在の購入リストに新しい商品を追加
+          const newItem = {
+              prd_id: itemData.prd_id, // 商品ID
+              code: code,              // 商品コード
+              name: itemData.name,     // 商品名
+              price: itemData.price    // 商品価格
+            };
       // 現在の購入リストに新しい商品を追加
-      setPurchaseList([...purchaseList, itemData]);
+      setPurchaseList([...purchaseList, newItem]);
        // 商品コードと商品データをリセット（空欄にする）
       setCode('');          // ① 商品コードを空にする
       setItemData(null);     // ② ③ 商品データをリセット
-    }
+    } else {
+    alert("商品情報が正しくありません");
+   }
   };
 
 
