@@ -118,7 +118,11 @@ def process_purchase(request: PurchaseRequest, db: Session = Depends(get_db)):
     # すべての取引明細をデータベースに保存
     db.commit()
 
-    return {"message": "Purchase processed successfully", "transaction_id": trd_id}
+    return {
+        "message": "Purchase processed successfully", 
+        "transaction_id": trd_id,
+        "total_amt": total_amount
+        }
 
 Base.metadata.create_all(bind=engine)
 
