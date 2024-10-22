@@ -8,6 +8,7 @@ export default function Home() {
   const [itemData, setItemData] = useState(null);  // クエリ結果の状態
   const [message, setMessage] = useState('');
   const [purchaseList, setPurchaseList] = useState([]);  // 購入リストの状態
+  const [totalAmount, setTotalAmount] = useState(null);  // 合計金額の状態
 
   const handleCheck = async () =>{
     try{
@@ -75,7 +76,10 @@ export default function Home() {
         }),
       });
       const data = await res.json();
-      alert('購入が完了しました');
+
+
+      // total_amtを取得して画面に表示
+      setTotalAmount(data.total_amt);
     } catch (error) {
       console.error('Error processing purchase:', error);
     }
@@ -83,12 +87,9 @@ export default function Home() {
 
 
   return (
-    <div className="flex flex-col">
-    <h1>Hello world</h1>
-    <button className="btn btn-neutral w-48" onClick={handleCheck}>check</button>
-    {message && <p>受信メッセージ: {message}</p>}
+    <div className="flex flex-col justify-center items-center gap-4">
 
-    <p className="text-2xl mt-20">YYY_POSアプリ</p>
+    <p className="text-2xl mt-10">YYY_POSアプリ</p>
 
     <input
      type="text"
@@ -111,7 +112,7 @@ export default function Home() {
       <button className="btn btn-primary w-80 max-w-xs mb-8"  onClick={handleAddToList}>追加</button>
 
       <p className="text-2xl mb-2">購入リスト</p>
-      <div className="border border-gray-300 p-4 rounded-lg w-1/2 mb-4">
+      <div className="border border-gray-300 p-4 rounded-lg w-auto mb-4">
       {purchaseList.length > 0 ? (
       purchaseList.map((item, index) => (
       <div key={index} className="">
@@ -123,7 +124,15 @@ export default function Home() {
         )}
           </div>
 
-      <button className="btn btn-primary w-80 max-w-xs mb-8" onClick={handlePurchase}>購入</button>
+      <button className="btn btn-secondary w-80 max-w-xs mb-2" onClick={handlePurchase}>購入</button>
+
+      {/* 合計金額を表示 */}
+      {totalAmount !== null && (
+        <div className="mt-2 mb-10">
+          <h2 className="text-xl">合計金額: {totalAmount}円</h2>
+        </div>
+      )}    
+    
     </div>
   );
 }
